@@ -45,7 +45,7 @@ To reverse the last changes made to the file, use the following command:
  
 
 ```
-python line_editor.py --reverse
+python line_editor.py --restore-backup
 ```
 This command restores the file to its state before the last edit.
 
