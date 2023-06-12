@@ -1,0 +1,6 @@
+{
+  "new_path": "new_location/config.txt",
+  "owner": "1000",
+  "group": "1000",
+  "permissions": "0644"
+}
