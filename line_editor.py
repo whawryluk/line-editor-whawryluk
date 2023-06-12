@@ -35,10 +35,16 @@ class FileEditor:
             self.create_backup()
             with open(self.file_path, 'r') as file:
                 lines = file.readlines()
+
+            if not 1 <= line_num <= len(lines):
+                raise ValueError(f"Invalid line number. The file has {len(lines)} lines.")
+
             lines[line_num - 1] = new_content + '\n'
             with open(self.file_path, 'w') as file:
                 file.writelines(lines)
+
             logging.info(f"Edited line {line_num} with new content: {new_content}")
+            editor.apply_manifest()
 
         except Exception as e:
             logging.error(f"Error occurred: {e}")
@@ -79,7 +85,6 @@ if __name__ == "__main__":
             editor.restore_backup()
         else:
             editor.edit_line(args.line_num, args.new_content)
-            editor.apply_manifest()
 
     except FileNotFoundError as e:
         logging.error(f"Error occurred: {e}")
