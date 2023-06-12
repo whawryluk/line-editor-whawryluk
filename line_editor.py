@@ -5,7 +5,7 @@ import argparse
 import logging
 
 
-class FileEditor:
+class LineEditor:
     def __init__(self, file_path, manifest_path):
         self.file_path = file_path
         self.manifest_path = manifest_path
@@ -31,20 +31,20 @@ class FileEditor:
             raise FileNotFoundError(f"No backup file found at {self.backup_path}")
 
     def edit_line(self, line_num, new_content):
+        self.create_backup()
+        with open(self.file_path, 'r') as file:
+            lines = file.readlines()
+
+        if not 1 <= line_num <= len(lines):
+            raise ValueError(f"Invalid line number. The file has {len(lines)} lines.")
+
         try:
-            self.create_backup()
-            with open(self.file_path, 'r') as file:
-                lines = file.readlines()
-
-            if not 1 <= line_num <= len(lines):
-                raise ValueError(f"Invalid line number. The file has {len(lines)} lines.")
-
             lines[line_num - 1] = new_content + '\n'
             with open(self.file_path, 'w') as file:
                 file.writelines(lines)
 
             logging.info(f"Edited line {line_num} with new content: {new_content}")
-            editor.apply_manifest()
+            self.apply_manifest()
 
         except Exception as e:
             logging.error(f"Error occurred: {e}")
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     parser.add_argument('new_content', type=str, nargs='?', default='', help='New line contents')
     args = parser.parse_args()
 
-    editor = FileEditor('./config.txt', './manifest.json')
+    editor = LineEditor('./config.txt', './manifest.json')
 
     try:
         if not os.path.exists(editor.file_path):
