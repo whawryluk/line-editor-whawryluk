@@ -1,4 +1,6 @@
 import json
+import os
+
 import pytest
 
 from line_editor import LineEditor
@@ -11,7 +13,21 @@ def config_file(tmp_path):
         file.write('Line 1 content\n')
         file.write('Line 2 content\n')
         file.write('Line 3 content\n')
-        
+
+    yield config_path
+
+
+@pytest.fixture
+def new_config_file(tmp_path):
+    new_location = tmp_path / 'new_location'
+    new_location.mkdir()
+
+    config_path = new_location / 'config.txt'
+    with open(config_path, 'w') as file:
+        file.write('New Line 1 content\n')
+        file.write('New Line 2 content\n')
+        file.write('New Line 3 content\n')
+
     yield config_path
 
 
@@ -24,6 +40,7 @@ def config_backup_file(tmp_path):
         file.write('Line 3 content\n')
 
     yield config_path
+
 
 @pytest.fixture
 def manifest_file(tmp_path):
@@ -40,18 +57,14 @@ def manifest_file(tmp_path):
     yield manifest_path
 
 
-def test_no_config_file():
-    editor = LineEditor('./nonexistent_config.txt', './manifest.json')
-
+def test_no_config_file(manifest_file):
     with pytest.raises(FileNotFoundError):
-        editor.restore_backup()
+        LineEditor('./nonexistent_config.txt', manifest_file)
 
 
-def test_no_manifest_file():
-    editor = LineEditor('./config.txt', './nonexistent_manifest.json')
-
+def test_no_manifest_file(config_file):
     with pytest.raises(FileNotFoundError):
-        editor.restore_backup()
+        LineEditor(config_file, './nonexistent_manifest.json')
 
 
 def test_no_backup_file(config_file, manifest_file):
@@ -61,8 +74,14 @@ def test_no_backup_file(config_file, manifest_file):
         editor.restore_backup()
 
 
-def test_restore_backup(config_file, config_backup_file, manifest_file):
+def test_restore_backup(config_file, config_backup_file, manifest_file, new_config_file, monkeypatch):
     editor = LineEditor(config_file, manifest_file)
+
+    def mock_chown(path, owner, group):
+        pass
+
+    monkeypatch.setattr(os, 'chown', mock_chown)
+
     editor.edit_line(2, "Modified line content")
     editor.restore_backup()
 
@@ -88,4 +107,3 @@ def test_edit_line_invalid_line_num(config_file, manifest_file):
 
     with pytest.raises(ValueError):
         editor.edit_line(10, "Invalid line content")
-
